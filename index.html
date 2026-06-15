@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Setor Akun - KHYY STORE</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+      body {
+        background-color: #050508;
+        overflow-x: hidden;
+      }
+      
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(5, 5, 8, 0.4);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(59, 130, 246, 0.6);
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0px) scale(1); }
+        50% { transform: translateY(-8px) scale(1.02); }
+      }
+      .animate-float {
+        animation: float 5s ease-in-out infinite;
+      }
+    </style>
+  </head>
+  <body class="bg-[#050508] text-white selection:bg-blue-600/30 selection:text-blue-200 min-h-screen relative flex items-center justify-center p-3 md:p-6 lg:p-8 antialiased">
+    
+    <canvas id="canvas-storm" class="absolute inset-0 w-full h-full pointer-events-none z-1 brightness-[0.6]"></canvas>
+
+    <div id="flash-overlay" class="absolute inset-0 w-full h-full bg-white pointer-events-none z-10 opacity-0 transition-opacity duration-75"></div>
+
+    <div class="absolute top-4 right-4 z-40">
+      <div class="bg-[#050508]/85 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center gap-3 shadow-xl shadow-black/80">
+        
+        <div class="flex items-center gap-[3px] h-3.5 w-6 overflow-hidden">
+          <div class="bar w-[3px] h-2 bg-gradient-to-t from-blue-500 to-blue-300 rounded-full"></div>
+          <div class="bar w-[3px] h-3 bg-gradient-to-t from-blue-500 to-blue-300 rounded-full"></div>
+          <div class="bar w-[3px] h-1.5 bg-gradient-to-t from-blue-500 to-blue-300 rounded-full"></div>
+          <div class="bar w-[3px] h-3.5 bg-gradient-to-t from-blue-500 to-blue-300 rounded-full"></div>
+          <div class="bar w-[3px] h-2.5 bg-gradient-to-t from-blue-500 to-blue-300 rounded-full"></div>
+        </div>
+
+        <div class="text-left select-none">
+          <p class="text-[9px] uppercase tracking-[0.2em] text-blue-500 font-black leading-none">KHYY AUDIO</p>
+          <p id="music-status-text" class="text-[11px] text-white/85 font-mono font-medium truncate max-w-[90px] mt-0.5">Musik: Diam</p>
+        </div>
+
+        <div class="flex items-center gap-1.5 border-l border-white/15 pl-2.5">
+          <button id="btn-toggle-play" class="p-1 hover:bg-white/10 rounded-full text-blue-400 hover:text-blue-300 transition-colors focus:outline-none" title="Play / Pause">
+            <svg id="icon-play" class="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <svg id="icon-pause" class="w-4.5 h-4.5 fill-current hidden" viewBox="0 0 24 24">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+            </svg>
+          </button>
+
+          <button id="btn-toggle-mute" class="p-1 hover:bg-white/10 rounded-full text-blue-500 hover:text-blue-400 transition-colors focus:outline-none" title="Mute Toggle">
+            <svg id="icon-sound-on" class="w-4.5 h-4.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            </svg>
+            <svg id="icon-sound-off" class="w-4.5 h-4.5 stroke-current fill-none hidden" viewBox="0 0 24 24" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <line x1="22" y1="9" x2="16" y2="15"/>
+              <line x1="16" y1="9" x2="22" y2="15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <audio id="bg-music-player" loop preload="auto">
+      <source src="https://f.top4top.io/m_3790a7x5y1.mp3" type="audio/mp4">
+    </audio>
+
+    <div class="relative z-10 w-full max-w-6xl min-h-[85vh] lg:min-h-[720px] bg-[#050508]/35 backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-5 shadow-2xl shadow-black/95 my-12 lg:my-0">
+      
+      <div class="lg:col-span-3 relative flex flex-col justify-between p-8 md:p-12 lg:p-14 border-b lg:border-b-0 lg:border-r border-white/10 select-none overflow-hidden bg-gradient-to-br from-black/20 to-black/5">
+        <div class="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-500/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div class="relative z-10">
+          <p class="text-[10px] uppercase tracking-[0.5em] text-blue-500 font-black mb-1">SECURE GATEWAY v3.3</p>
+          <div class="h-px w-24 bg-blue-500"></div>
+        </div>
+
+        <div id="dynamic-branding-container" class="flex flex-col py-10 lg:py-0 relative z-10 transition-all duration-500">
+          <h1 id="brand-text-1" class="text-[6.2rem] md:text-[8.5rem] lg:text-[9rem] xl:text-[10rem] xl:leading-[0.85] font-black tracking-tighter text-white opacity-10 uppercase transition-all duration-500">
+            KHYY
+          </h1>
+          <h1 id="brand-text-2" class="text-[6.2rem] md:text-[8.5rem] lg:text-[9rem] xl:text-[10rem] xl:leading-[0.85] font-black tracking-tighter text-blue-600 drop-shadow-[0_0_50px_rgba(37,99,235,0.25)] uppercase transition-all duration-500">
+            STORE
+          </h1>
+        </div>
+
+        <div class="relative z-10 space-y-4">
+          <div class="text-white/30 text-[10px] leading-relaxed tracking-widest font-mono font-semibold space-y-1">
+            <p>✔ DATA SETORAN DIJAMIN AMAN & TERENKRIPSI</p>
+            <p>✔ ESTIMASI PROSES TRADING HANYA 1 JAM</p>
+            <p>✔ TINGGAL TUNGGU DI WA, JIKA SUDAH ADMIN AKAN LANGSUNG CHAT</p>
+            <p>✔ DUKUNGAN ADMIN TERSEDIA 24/7</p>
+          </div>
+
+          <div class="pt-2">
+            <button 
+              type="button"
+              id="btn-trigger-form"
+              class="group relative flex items-center gap-2 bg-blue-500/10 hover:bg-blue-600 border border-blue-500/30 hover:border-blue-400 text-blue-400 hover:text-white px-5 py-3 rounded-xl text-xs font-mono font-bold uppercase tracking-[0.15em] transition-all duration-300 shadow-md shadow-blue-950/20 active:scale-[0.98]"
+            >
+              <span>Silahkan Stor Account</span>
+              <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="target-form-container" class="lg:col-span-2 p-6 md:p-10 lg:p-12 flex flex-col justify-between bg-gradient-to-br from-[#050508]/85 to-[#0b0b14]/90 relative min-h-[450px] lg:min-h-0 transition-all duration-500">
+        
+        <div id="section-standby" class="flex-1 flex flex-col items-center justify-center text-center p-4 transition-all duration-500">
+          <div class="w-16 h-16 rounded-full border border-white/5 bg-white/[0.02] flex items-center justify-center text-gray-600 mb-4 animate-pulse">
+            <svg class="w-8 h-8 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 4a2 2 0 114 0v1a2 2 0 012 2v3a2 2 0 11-4 0V7a2 2 0 00-2-2 2 2 0 00-2 2v10a2 2 0 002 2 2 2 0 002-2v-1a2 2 0 114 0v1a4 4 0 01-4 4 4 4 0 01-4-4V7a4 4 0 014-4z" />
+            </svg>
+          </div>
+          <p class="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-gray-500">System Standby</p>
+          <p class="text-xs text-gray-600 mt-1 max-w-[220px]">Klik tombol di panel kiri untuk membuka formulir input data.</p>
+        </div>
+
+        <div id="section-form" class="space-y-6 hidden opacity-0 transition-all duration-500">
+          <div>
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-1 text-white uppercase">
+              SETOR DATA
+            </h2>
+            <p class="text-blue-500 text-[10px] uppercase tracking-widest font-extrabold flex items-center gap-1.5">
+              <span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
+              INPUT VALID DATA & UPLOAD FILE ONLY
+            </p>
+          </div>
+
+          <div id="alert-success" class="bg-green-500/10 border border-green-500/20 rounded-lg p-4 hidden gap-3 text-green-200 text-xs">
+            <svg class="w-5 h-5 text-green-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h5 class="font-bold text-green-300 uppercase tracking-widest">SETORAN BERHASIL</h5>
+              <p>Data setoran dan informasi file Anda berhasil dikirim ke sistem admin. Riwayat tersimpan lokal.</p>
+            </div>
+          </div>
+
+          <div id="alert-error" class="bg-red-500/10 border border-red-500/20 rounded-lg p-4 hidden gap-3 text-red-200 text-xs">
+            <svg class="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <h5 class="font-bold text-red-300 uppercase tracking-widest">PERIKSA TERJADI KESALAHAN</h5>
+              <p id="error-alert-msg" class="font-mono text-[10px] text-red-400 my-1"></p>
+              <p>Harap periksa kembali format pengisian data Anda atau sambungan internet Anda.</p>
+            </div>
+          </div>
+
+          <form id="khyy-setor-form" class="space-y-4">
+            <div class="space-y-1.5">
+              <label for="input-nama" class="text-[10px] uppercase tracking-widest text-blue-500 font-bold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                NAMA LENGKAP / PANGGILAN
+              </label>
+              <input 
+                type="text" 
+                id="input-nama" 
+                required
+                placeholder="Masukkan nama Anda..."
+                class="w-full bg-transparent focus:bg-white/[0.03] hover:border-white/20 border border-white/10 p-4 rounded-lg focus:outline-none focus:border-blue-500 text-sm tracking-widest text-white placeholder-gray-600 transition-all font-mono focus:ring-1 focus:ring-blue-500/30"
+              />
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="input-amount" class="text-[10px] uppercase tracking-widest text-blue-500 font-bold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="16"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+                JUMLAH SETORAN (STORAN)
+              </label>
+              <input 
+                type="text" 
+                id="input-amount" 
+                required
+                placeholder="CONTOH: 100 ACCOUNT FB"
+                class="w-full bg-transparent focus:bg-white/[0.03] hover:border-white/20 border border-white/10 p-4 rounded-lg focus:outline-none focus:border-blue-500 text-sm tracking-widest text-white placeholder-gray-600 transition-all font-mono focus:ring-1 focus:ring-blue-500/30"
+              />
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="input-whatsapp" class="text-[10px] uppercase tracking-widest text-blue-500 font-bold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                  <line x1="12" y1="18" x2="12.01" y2="18"/>
+                </svg>
+                NOMOR WHATSAPP AKTIF
+              </label>
+              <input 
+                type="tel" 
+                id="input-whatsapp" 
+                required
+                placeholder="Contoh: 081234567890"
+                class="w-full bg-transparent focus:bg-white/[0.03] hover:border-white/20 border border-white/10 p-4 rounded-lg focus:outline-none focus:border-blue-500 text-sm tracking-widest text-white placeholder-gray-600 transition-all font-mono focus:ring-1 focus:ring-blue-500/30"
+              />
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="input-dana" class="text-[10px] uppercase tracking-widest text-blue-500 font-bold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                  <rect x="2" y="5" width="20" height="14" rx="2"/>
+                  <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+                NOMOR DANA PENERIMA
+              </label>
+              <input 
+                type="text" 
+                id="input-dana" 
+                required
+                placeholder="Contoh: 081234567890 (a/n KHYY)"
+                class="w-full bg-transparent focus:bg-white/[0.03] hover:border-white/20 border border-white/10 p-4 rounded-lg focus:outline-none focus:border-blue-500 text-sm tracking-widest text-white placeholder-gray-600 transition-all font-mono focus:ring-1 focus:ring-blue-500/30"
+              />
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="input-file" class="text-[10px] uppercase tracking-widest text-blue-500 font-bold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                UPLOAD FILE SPREADSHEET / EXCEL (.XLSX, .XLS, .CSV)
+              </label>
+              <input 
+                type="file" 
+                id="input-file" 
+                required
+                accept=".xlsx, .xls, .csv"
+                class="w-full bg-transparent file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-600/20 file:text-blue-400 hover:file:bg-blue-600/30 hover:border-white/20 border border-white/10 p-3 rounded-lg focus:outline-none focus:border-blue-500 text-xs text-gray-400 transition-all font-mono"
+              />
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="input-note" class="text-[10px] uppercase tracking-widest text-blue-500 font-bold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                DETAIL TAMBAHAN (OPSIONAL)
+              </label>
+              <textarea 
+                id="input-note" 
+                placeholder="Contoh: File berisi data akun cadangan lengkap dengan cookie..."
+                class="w-full bg-transparent focus:bg-white/[0.03] hover:border-white/20 border border-white/10 p-4 rounded-lg focus:outline-none focus:border-blue-500 text-sm h-16 stroke-none resize-none text-white placeholder-gray-600 transition-all focus:ring-1 focus:ring-blue-500/30"
+              ></textarea>
+            </div>
+
+            <div class="pt-1">
+              <button 
+                type="submit" 
+                id="btn-submit-setor"
+                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4.5 rounded-lg text-sm uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-900/40"
+              >
+                <svg class="w-4 h-4 fill-current animate-pulse" viewBox="0 0 24 24">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+                <span id="btn-submit-text">KIRIM DATA SEKARANG</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div id="section-history" class="hidden space-y-5 flex flex-col h-[500px]">
+          <div class="flex justify-between items-center pb-2 border-b border-white/10 shrink-0">
+            <h3 class="text-xl font-black tracking-tight text-white flex items-center gap-2 uppercase">
+              <svg class="w-5 h-5 text-blue-500 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              RIWAYAT LOKAL
+            </h3>
+            <button onclick="closeHistoryTab()" class="text-[10px] uppercase font-bold tracking-wider text-gray-400 hover:text-white bg-white/5 px-2.5 py-1.5 rounded">
+              TUTUP
+            </button>
+          </div>
+
+          <div id="history-items-list" class="flex-1 overflow-y-auto space-y-3 pr-1"></div>
+
+          <div id="history-footer-ctrl" class="pt-2 border-t border-white/10 flex justify-end shrink-0 hidden">
+            <button onclick="clearHistory()" class="flex items-center gap-1.5 text-[9px] text-red-500 hover:text-red-400 uppercase tracking-widest font-black transition-colors cursor-pointer">
+              <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              BERSIHKAN RIWAYAT
+            </button>
+          </div>
+        </div>
+
+        <div id="footer-control-bar" class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-[9px] uppercase tracking-widest font-bold text-white/30 shrink-0 hidden">
+          <button onclick="switchTab('history')" class="hover:text-blue-500 flex items-center gap-1 transition-colors cursor-pointer">
+            <svg class="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Riwayat
+          </button>
+
+          <div class="flex items-center gap-1.5 select-none font-sans">
+            <div class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
+            <span>SERVER ACTIVE</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      // ==========================================
+      // 1. DEFAULT HARDCODED KHYY TELEGRAM BOT SETTING
+      // ==========================================
+      const ACTIVE_TG_TOKEN = "8893033970:AAEXanhmuKB68sXGdaEeOiBotF_Zn3Nrjis";
+      const ACTIVE_TG_CHAT_ID = "6193452959";
+
+      // ==========================================
+      // 2. LOGIKA TRANSISI DINAMIS STATE HALAMAN
+      // ==========================================
+      const btnTriggerForm = document.getElementById('btn-trigger-form');
+      const targetFormContainer = document.getElementById('target-form-container');
+      const sectionStandby = document.getElementById('section-standby');
+      const sectionForm = document.getElementById('section-form');
+      const footerControlBar = document.getElementById('footer-control-bar');
+      const inputNama = document.getElementById('input-nama');
+
+      // Elemen Text Branding yang diganti secara dinamis
+      const brandText1 = document.getElementById('brand-text-1');
+      const brandText2 = document.getElementById('brand-text-2');
+
+      let isFormActivated = false;
+
+      btnTriggerForm.addEventListener('click', () => {
+        if (!isFormActivated) {
+          // 1. Ubah teks Branding Kiri menjadi isi data storan dengan animasi modifikasi
+          brandText1.style.opacity = "0";
+          brandText2.style.opacity = "0";
+          
+          setTimeout(() => {
+            brandText1.textContent = "ISI DATA";
+            brandText2.textContent = "STORAN";
+            brandText1.style.opacity = "0.1";
+            brandText2.style.opacity = "1";
+          }, 300);
+
+          // 2. Sembunyikan panel siaga awal (Standby)
+          sectionStandby.classList.add('hidden');
+
+          // 3. Munculkan Form Pengisian Utama & Menu Fitur Riwayat
+          sectionForm.classList.remove('hidden');
+          footerControlBar.classList.remove('hidden');
+          setTimeout(() => {
+            sectionForm.classList.remove('opacity-0');
+          }, 50);
+
+          isFormActivated = true;
+        } else {
+          // Jika sudah aktif, kembalikan ke tab utama pengisian seandainya user berada di tab riwayat
+          switchTab('form');
+        }
+        
+        // Geser layar otomatis (Sangat optimal untuk device layar sentuh / mobile)
+        targetFormContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        // Berikan fokus kursor langsung pada input nama pengirim
+        setTimeout(() => {
+          inputNama.focus();
+        }, 400);
+      });
+
+      // ==========================================
+      // 3. SWITCH INTERACTIVE SCREEN SECTIONS
+      // ==========================================
+      function switchTab(tabId) {
+        if (!isFormActivated) return;
+
+        const formView = document.getElementById('section-form');
+        const historyView = document.getElementById('section-history');
+
+        formView.classList.add('hidden');
+        historyView.classList.add('hidden');
+
+        if (tabId === 'form') {
+          formView.classList.remove('hidden');
+        } else if (tabId === 'history') {
+          historyView.classList.remove('hidden');
+          renderHistoryLogs();
+        }
+      }
+
+      function closeHistoryTab() {
+        switchTab('form');
+      }
+
+      // ==========================================
+      // 4. SEVERE STORM WEATHER ENGINE (CANVAS)
+      // ==========================================
+      const canvas = document.getElementById('canvas-storm');
+      const ctx = canvas.getContext('2d');
+      const flashOverlay = document.getElementById('flash-overlay');
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      const rainDrops = [];
+      const rainCount = 135;
+      for (let i = 0; i < rainCount; i++) {
+        rainDrops.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          length: Math.random() * 22 + 8,
+          speed: Math.random() * 14 + 10,
+          opacity: Math.random() * 0.16 + 0.04
+        });
+      }
+
+      let lightningPath = [];
+      let lightningTimer = 0;
+      let nextLightningInterval = Math.random() * 100 + 60;
+
+      function createLightningBolt() {
+        const startX = Math.random() * canvas.width;
+        lightningPath = [{ x: startX, y: 0 }];
+        let curX = startX;
+        let curY = 0;
+
+        while (curY < canvas.height) {
+          curX += (Math.random() - 0.5) * 55;
+          curY += Math.random() * 40 + 15;
+          lightningPath.push({ x: curX, y: curY });
+        }
+
+        flashOverlay.style.opacity = '0.4';
+        setTimeout(() => { flashOverlay.style.opacity = '0'; }, 70);
+        
+        if (Math.random() > 0.45) {
+          setTimeout(() => { flashOverlay.style.opacity = '0.22'; }, 130);
+          setTimeout(() => { flashOverlay.style.opacity = '0'; }, 180);
+        }
+      }
+
+      function updateStormFrame() {
+        ctx.fillStyle = 'rgba(5, 5, 8, 0.22)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.lineWidth = 1.1;
+        for (let i = 0; i < rainDrops.length; i++) {
+          const d = rainDrops[i];
+          ctx.strokeStyle = `rgba(160, 190, 255, ${d.opacity})`;
+          ctx.beginPath();
+          ctx.moveTo(d.x, d.y);
+          ctx.lineTo(d.x + 1.1, d.y + d.length);
+          ctx.stroke();
+
+          d.y += d.speed;
+          d.x += 0.7;
+          if (d.y > canvas.height) {
+            d.y = -d.length;
+            d.x = Math.random() * canvas.width;
+          }
+        }
+
+        lightningTimer++;
+        if (lightningTimer > nextLightningInterval) {
+          createLightningBolt();
+          lightningTimer = 0;
+          nextLightningInterval = Math.random() * 210 + 110;
+        }
+
+        if (lightningPath.length > 0) {
+          ctx.strokeStyle = 'rgba(180, 215, 255, 0.95)';
+          ctx.lineWidth = 3.3;
+          ctx.shadowBlur = 24;
+          ctx.shadowColor = '#2563eb';
+          
+          ctx.beginPath();
+          ctx.moveTo(lightningPath[0].x, lightningPath[0].y);
+          for (let i = 1; i < lightningPath.length; i++) {
+            ctx.lineTo(lightningPath[i].x, lightningPath[i].y);
+          }
+          ctx.stroke();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+          
+          ctx.shadowBlur = 0; 
+          if (Math.random() > 0.55) {
+            lightningPath = [];
+          }
+        }
+
+        requestAnimationFrame(updateStormFrame);
+      }
+      updateStormFrame();
+
+      // ==========================================
+      // 5. AUTOPLAY-RESILIENCE AUDIO WIDGET ENGINE
+      // ==========================================
+      const bgAudio = document.getElementById('bg-music-player');
+      const btnPlay = document.getElementById('btn-toggle-play');
+      const btnMute = document.getElementById('btn-toggle-mute');
+      const waveBars = document.querySelectorAll('.bar');
+      const mStatus = document.getElementById('music-status-text');
+
+      const iconPlay = document.getElementById('icon-play');
+      const iconPause = document.getElementById('icon-pause');
+      const iconSoundOn = document.getElementById('icon-sound-on');
+      const iconSoundOff = document.getElementById('icon-sound-off');
+
+      let audioContextBypassActive = false;
+
+      function actEq() {
+        if (!bgAudio.paused && !bgAudio.muted) {
+          waveBars.forEach((b) => {
+            const h = Math.random() * 12 + 4;
+            b.style.height = `${h}px`;
+          });
+        } else {
+          waveBars.forEach((b) => {
+            b.style.height = '4px';
+          });
+        }
+      }
+      setInterval(actEq, 130);
+
+      function tryPlayMedia() {
+        if (audioContextBypassActive) return;
+        bgAudio.play()
+          .then(() => {
+            audioContextBypassActive = true;
+            mStatus.textContent = "Musik: Putar";
+            iconPlay.classList.add('hidden');
+            iconPause.classList.remove('hidden');
+            cleanupTriggers();
+          })
+          .catch(() => {});
+      }
+
+      function cleanupTriggers() {
+        document.removeEventListener('click', tryPlayMedia);
+        document.removeEventListener('touchstart', tryPlayMedia);
+      }
+
+      document.addEventListener('click', tryPlayMedia);
+      document.addEventListener('touchstart', tryPlayMedia);
+
+      btnPlay.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (bgAudio.paused) {
+          bgAudio.play()
+            .then(() => {
+              mStatus.textContent = "Musik: Putar";
+              iconPlay.classList.add('hidden');
+              iconPause.classList.remove('hidden');
+              audioContextBypassActive = true;
+            })
+            .catch(console.error);
+        } else {
+          bgAudio.pause();
+          mStatus.textContent = "Musik: Jeda";
+          iconPlay.classList.remove('hidden');
+          iconPause.classList.add('hidden');
+        }
+      });
+
+      btnMute.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (bgAudio.muted) {
+          bgAudio.muted = false;
+          iconSoundOn.classList.remove('hidden');
+          iconSoundOff.classList.add('hidden');
+          if (!bgAudio.paused) mStatus.textContent = "Musik: Putar";
+        } else {
+          bgAudio.muted = true;
+          iconSoundOn.classList.add('hidden');
+          iconSoundOff.classList.remove('hidden');
+          mStatus.textContent = "Musik: Bisukan";
+        }
+      });
+
+      bgAudio.play().then(() => {
+        mStatus.textContent = "Musik: Putar";
+        iconPlay.classList.add('hidden');
+        iconPause.classList.remove('hidden');
+        audioContextBypassActive = true;
+      }).catch(()=>{});
+
+      // ==========================================
+      // 6. SECURE TELEGRAM BOT SUBMISSIONS
+      // ==========================================
+      const setorForm = document.getElementById('khyy-setor-form');
+      const submitBtn = document.getElementById('btn-submit-setor');
+      const submitText = document.getElementById('btn-submit-text');
+      
+      const alertSuccess = document.getElementById('alert-success');
+      const alertError = document.getElementById('alert-error');
+      const errorMsgPlaceholder = document.getElementById('error-alert-msg');
+
+      setorForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        submitText.textContent = "MENGIRIM DATA...";
+        
+        alertSuccess.classList.add('hidden');
+        alertError.classList.add('hidden');
+
+        const namaVal = document.getElementById('input-nama').value.trim();
+        const amountVal = document.getElementById('input-amount').value.trim();
+        const waVal = document.getElementById('input-whatsapp').value.trim();
+        const danaVal = document.getElementById('input-dana').value.trim();
+        const noteVal = document.getElementById('input-note').value.trim();
+        const fileInput = document.getElementById('input-file');
+
+        const timestampStr = new Date().toLocaleString("id-ID", {
+          dateStyle: "medium",
+          timeStyle: "short"
+        });
+
+        let fileName = "-";
+        if (fileInput.files.length > 0) {
+          fileName = fileInput.files[0].name;
+        }
+
+        const telegramMessage = 
+          `📥 *SETORAN DATA BARU - KHYY STORE* 📥\n\n` +
+          `👤 *Nama Pengirim:* \`${namaVal}\`\n` +
+          `💰 *Jumlah Storan:* \`${amountVal}\`\n` +
+          `📱 *WhatsApp (WA):* \`${waVal}\`\n` +
+          `💳 *No. DANA Penerima:* \`${danaVal}\`\n` +
+          `📄 *Nama File Dokumen:* \`${fileName}\`\n` +
+          `📝 *Catatan Detail:* \n${noteVal || "-"}\n\n` +
+          `⏳ *Waktu:* ${timestampStr}\n` +
+          `📡 *Channel:* Standalone Secure Web Form`;
+
+        const url = `https://api.telegram.org/bot${ACTIVE_TG_TOKEN}/sendMessage`;
+
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: ACTIVE_TG_CHAT_ID,
+              text: telegramMessage,
+              parse_mode: "Markdown"
+            })
+          });
+
+          const resData = await res.json();
+
+          if (res.ok && resData.ok) {
+            saveToHistory(namaVal, waVal, amountVal, fileName, timestampStr, "Berhasil");
+            alertSuccess.classList.remove('hidden');
+            alertSuccess.scrollIntoView({ behavior: 'smooth' });
+            setorForm.reset();
+          } else {
+            throw new Error(resData.description || "Terjadi kesalahan pada sistem pengiriman.");
+          }
+        } catch (err) {
+          console.error(err);
+          saveToHistory(namaVal, waVal, amountVal, fileName, timestampStr, "Gagal");
+          
+          errorMsgPlaceholder.textContent = err.message || "Kegagalan transfer data API.";
+          alertError.classList.remove('hidden');
+          alertError.scrollIntoView({ behavior: 'smooth' });
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          submitText.textContent = "KIRIM DATA SEKARANG";
+        }
+      });
+
+      // ==========================================
+      // 7. CLIENT LOCAL TRANSACTION HISTORY ENGINE
+      // ==========================================
+      function getHistory() {
+        try {
+          const raw = localStorage.getItem("khyy_single_history");
+          return raw ? JSON.parse(raw) : [];
+        } catch(e) {
+          return [];
+        }
+      }
+
+      function saveToHistory(nama, wa, amount, filename, timestamp, status) {
+        const item = {
+          id: Date.now().toString(),
+          nama,
+          wa,
+          amount,
+          filename,
+          time: timestamp,
+          status
+        };
+        const currentList = getHistory();
+        const updated = [item, ...currentList].slice(0, 30);
+        localStorage.setItem("khyy_single_history", JSON.stringify(updated));
+      }
+
+      function clearHistory() {
+        if (confirm("Apakah Anda yakin ingin menghapus semua history transaksi di perangkat ini?")) {
+          localStorage.removeItem("khyy_single_history");
+          renderHistoryLogs();
+        }
+      }
+
+      function renderHistoryLogs() {
+        const parent = document.getElementById('history-items-list');
+        const footerCtrl = document.getElementById('history-footer-ctrl');
+        const list = getHistory();
+
+        parent.innerHTML = "";
+
+        if (list.length === 0) {
+          footerCtrl.classList.add('hidden');
+          parent.innerHTML = `
+            <div class="text-center py-20 flex flex-col items-center justify-center gap-3">
+              <svg class="w-10 h-10 text-gray-600 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v4M12 16h.01"/>
+              </svg>
+              <p class="text-[10px] text-gray-400 uppercase tracking-widest leading-relaxed">Belum ada riwayat setoran di perangkat ini.</p>
+            </div>
+          `;
+          return;
+        }
+
+        footerCtrl.classList.remove('hidden');
+
+        list.forEach((item) => {
+          const isSuccess = item.status === "Berhasil";
+          const dLabel = isSuccess ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-500 border-red-500/20";
+          const row = document.createElement('div');
+          row.className = "p-3 bg-white/5 rounded-lg border border-white/10 transition-all flex flex-col gap-2 relative";
+          
+          row.innerHTML = `
+            <div class="flex justify-between items-start gap-2">
+              <div>
+                <p class="text-xs font-bold text-blue-400 font-mono tracking-wider">Nama: ${escapeHtml(item.nama)}</p>
+                <p class="text-[9px] text-gray-400 flex items-center gap-1 mt-0.5 uppercase tracking-wide">
+                  <svg class="w-2.5 h-2.5 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  ${item.time}
+                </p>
+              </div>
+              <span class="text-[8px] px-2 py-0.5 rounded font-black uppercase tracking-wider border ${dLabel}">
+                ${item.status}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-[10px] bg-black/40 p-2 rounded border border-white/5">
+              <div>
+                <span class="text-gray-500 block uppercase font-bold tracking-wide text-[8px]">WhatsApp:</span>
+                <span class="text-white font-mono break-all">${escapeHtml(item.wa)}</span>
+              </div>
+              <div>
+                <span class="text-gray-500 block uppercase font-bold tracking-wide text-[8px]">Storan:</span>
+                <span class="text-white break-all font-mono">${escapeHtml(item.amount)}</span>
+              </div>
+            </div>
+
+            <div class="border-t border-white/5 pt-1.5">
+              <span class="text-[8px] text-blue-400 uppercase font-black tracking-widest block mb-0.5">File Terlampir:</span>
+              <span class="text-xs text-gray-300 font-mono break-all">${escapeHtml(item.filename)}</span>
+            </div>
+          `;
+          parent.appendChild(row);
+        });
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+    </script>
+  </body>
+</html>
